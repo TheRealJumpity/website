@@ -1,29 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Discord Widget</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #111;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Live Discord Widget</title>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: white;
+  padding: 20px;
+}
+.card {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 400px;
+  margin: auto;
+}
+.member {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+}
+.member img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.invite-btn {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 10px 15px;
+  background: #5865F2;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+}
+.online {
+  color: #43b581;
+}
+</style>
 </head>
 <body>
 
-<iframe 
-  src="https://discord.com/widget?id=1478254435065925684&theme=dark"
-  width="350"
-  height="500"
-  allowtransparency="true"
-  frameborder="0"
-  sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts">
-</iframe>
+<div class="card">
+  <h1 id="serverName">Loading...</h1>
+  <p class="online" id="onlineCount"></p>
+  <div id="members"></div>
+  <a id="inviteBtn" class="invite-btn" target="_blank">Join Server</a>
+</div>
+
+<script>
+fetch("https://discord.com/api/guilds/1478254435065925684/widget.json")
+.then(res => res.json())
+.then(data => {
+  document.getElementById("serverName").innerText = data.name;
+  document.getElementById("onlineCount").innerText = 
+    "Online Members: " + data.presence_count;
+
+  document.getElementById("inviteBtn").href = data.instant_invite;
+
+  const membersDiv = document.getElementById("members");
+  membersDiv.innerHTML = "";
+
+  data.members.forEach(member => {
+    const div = document.createElement("div");
+    div.className = "member";
+    div.innerHTML = `
+      <img src="${member.avatar_url}">
+      ${member.username}
+    `;
+    membersDiv.appendChild(div);
+  });
+});
+</script>
 
 </body>
 </html>
