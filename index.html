@@ -2,80 +2,174 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Live Discord Widget</title>
+<title>Discord Live Widget</title>
+
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #111;
+  background: #2b2d31;
+  font-family: "gg sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.widget {
+  width: 350px;
+  background: #1e1f22;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  animation: fadeIn 0.4s ease;
+}
+
+.header {
+  background: #5865F2;
+  padding: 20px;
   color: white;
-  padding: 20px;
 }
-.card {
-  background: #1e1e1e;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 400px;
-  margin: auto;
+
+.header h1 {
+  margin: 0;
+  font-size: 20px;
 }
+
+.online-count {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.members {
+  padding: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 .member {
   display: flex;
   align-items: center;
-  margin: 8px 0;
+  padding: 6px 0;
+  animation: slideIn 0.3s ease;
 }
-.member img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+
+.avatar-wrapper {
+  position: relative;
   margin-right: 10px;
 }
-.invite-btn {
-  display: inline-block;
-  margin-top: 15px;
-  padding: 10px 15px;
-  background: #5865F2;
+
+.member img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.status {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  border: 3px solid #1e1f22;
+}
+
+.online { background: #23a559; }
+.idle { background: #f0b232; }
+.dnd { background: #f23f43; }
+.offline { background: #80848e; }
+
+.username {
+  color: #dbdee1;
+  font-size: 15px;
+}
+
+.invite {
+  display: block;
+  text-align: center;
+  padding: 12px;
+  background: #2b2d31;
   color: white;
   text-decoration: none;
-  border-radius: 6px;
-  font-weight: bold;
+  font-weight: 600;
+  border-top: 1px solid #3f4147;
+  transition: background 0.2s;
 }
-.online {
-  color: #43b581;
+
+.invite:hover {
+  background: #3f4147;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
 </head>
+
 <body>
 
-<div class="card">
-  <h1 id="serverName">Loading...</h1>
-  <p class="online" id="onlineCount"></p>
-  <div id="members"></div>
-  <a id="inviteBtn" class="invite-btn" target="_blank">Join Server</a>
+<div class="widget">
+  <div class="header">
+    <h1 id="serverName">Loading...</h1>
+    <div class="online-count" id="onlineCount"></div>
+  </div>
+
+  <div class="members" id="members"></div>
+
+  <a id="inviteBtn" class="invite" target="_blank">Join Server</a>
 </div>
 
 <script>
-fetch("https://discord.com/api/guilds/1478254435065925684/widget.json")
-.then(res => res.json())
-.then(data => {
-  document.getElementById("serverName").innerText = data.name;
-  document.getElementById("onlineCount").innerText = 
-    "Online Members: " + data.presence_count;
 
-  document.getElementById("inviteBtn").href = data.instant_invite;
+const API_URL = "https://discord.com/api/guilds/1478254435065925684/widget.json";
 
-  const membersDiv = document.getElementById("members");
-  membersDiv.innerHTML = "";
+function loadWidget() {
+  fetch(API_URL)
+  .then(res => res.json())
+  .then(data => {
 
-  data.members.forEach(member => {
-    const div = document.createElement("div");
-    div.className = "member";
-    div.innerHTML = `
-      <img src="${member.avatar_url}">
-      ${member.username}
-    `;
-    membersDiv.appendChild(div);
+    document.getElementById("serverName").innerText = data.name;
+    document.getElementById("onlineCount").innerText =
+      data.presence_count + " Members Online";
+
+    document.getElementById("inviteBtn").href = data.instant_invite;
+
+    const membersDiv = document.getElementById("members");
+    membersDiv.innerHTML = "";
+
+    data.members.forEach(member => {
+
+      const statusClass =
+        member.status === "online" ? "online" :
+        member.status === "idle" ? "idle" :
+        member.status === "dnd" ? "dnd" :
+        "offline";
+
+      const div = document.createElement("div");
+      div.className = "member";
+
+      div.innerHTML = `
+        <div class="avatar-wrapper">
+          <img src="${member.avatar_url}">
+          <div class="status ${statusClass}"></div>
+        </div>
+        <div class="username">${member.username}</div>
+      `;
+
+      membersDiv.appendChild(div);
+    });
   });
-});
+}
+
+loadWidget();
+setInterval(loadWidget, 30000); // auto refresh every 30s
+
 </script>
 
 </body>
